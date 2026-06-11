@@ -1,0 +1,12 @@
+name: sale_count_by_region
+signature: "(sales: list[Sale]) -> dict[Region, int]"
+deps: [Sale, Region, included_sales]
+invariants:
+  - counts only sales kept by included_sales
+  - output keys are exactly the regions present in included sales
+  - values sum to the length of included_sales
+examples:
+  - in: "[Sale(region='QLD', amount=10, completed=True), Sale(region='QLD', amount=20, completed=True), Sale(region='NSW', amount=None, completed=True)]"
+    out: "{'QLD': 2}"
+tests: [tests/test_metrics.py::test_sale_count_by_region]
+impl: src/metrics.py::sale_count_by_region

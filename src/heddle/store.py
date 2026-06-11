@@ -1,0 +1,164 @@
+"""SQLite store: contracts, dependency edges, impls, verifications, counters.
+
+The store is derived state — deletable and rebuildable from contracts/ at any
+time via `heddle index`.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS contracts(
+    name TEXT PRIMARY KEY, hash TEXT NOT NULL, yaml TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS edges(
+    from_name TEXT NOT NULL, to_name TEXT NOT NULL,           -- from depends on to
+    PRIMARY KEY(from_name, to_name));
+CREATE TABLE IF NOT EXISTS impls(
+    contract_name TEXT PRIMARY KEY, impl_hash TEXT, path TEXT);
+CREATE TABLE IF NOT EXISTS verifications(
+    key TEXT PRIMARY KEY, contract_name TEXT NOT NULL, status TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT '', ran_at TEXT NOT NULL, stale INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS counters(name TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS idx_edges_to ON edges(to_name);
+CREATE INDEX IF NOT EXISTS idx_verifications_contract ON verifications(contract_name);
+"""
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+class Store:
+    def __init__(self, db_path: Path | str):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._conn = sqlite3.connect(self.db_path)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.executescript(_SCHEMA)
+
+    def close(self) -> None:
+        self._conn.close()
+
+    # -- contracts ----------------------------------------------------------
+
+    def upsert_contract(self, name: str, chash: str, yaml_text: str) -> None:
+        self._conn.execute(
+            "INSERT INTO contracts(name, hash, yaml, updated_at) VALUES(?,?,?,?) "
+            "ON CONFLICT(name) DO UPDATE SET hash=excluded.hash, yaml=excluded.yaml, updated_at=excluded.updated_at",
+            (name, chash, yaml_text, _now()),
+        )
+        self._conn.commit()
+
+    def get_contract(self, name: str) -> sqlite3.Row | None:
+        return self._conn.execute("SELECT * FROM contracts WHERE name=?", (name,)).fetchone()
+
+    def contract_names(self) -> list[str]:
+        return [r["name"] for r in self._conn.execute("SELECT name FROM contracts ORDER BY name")]
+
+    def contract_hashes(self) -> dict[str, str]:
+        return {r["name"]: r["hash"] for r in self._conn.execute("SELECT name, hash FROM contracts")}
+
+    def delete_contract(self, name: str) -> None:
+        self._conn.execute("DELETE FROM contracts WHERE name=?", (name,))
+        self._conn.execute("DELETE FROM edges WHERE from_name=?", (name,))
+        self._conn.execute("DELETE FROM impls WHERE contract_name=?", (name,))
+        self._conn.commit()
+
+    # -- edges --------------------------------------------------------------
+
+    def set_deps(self, name: str, deps: list[str]) -> None:
+        self._conn.execute("DELETE FROM edges WHERE from_name=?", (name,))
+        self._conn.executemany(
+            "INSERT OR IGNORE INTO edges(from_name, to_name) VALUES(?,?)",
+            [(name, d) for d in deps],
+        )
+        self._conn.commit()
+
+    def deps_of(self, name: str) -> list[str]:
+        return [r["to_name"] for r in self._conn.execute(
+            "SELECT to_name FROM edges WHERE from_name=? ORDER BY to_name", (name,))]
+
+    def dependents_of(self, name: str, transitive: bool = False) -> list[str]:
+        """Contracts that depend on `name` (directly, or transitively closed)."""
+        seen: set[str] = set()
+        frontier = [name]
+        while frontier:
+            rows = self._conn.execute(
+                f"SELECT DISTINCT from_name FROM edges WHERE to_name IN ({','.join('?' * len(frontier))})",
+                frontier,
+            ).fetchall()
+            frontier = [r["from_name"] for r in rows if r["from_name"] not in seen]
+            seen.update(frontier)
+            if not transitive:
+                break
+        return sorted(seen)
+
+    def transitive_deps(self, name: str) -> list[str]:
+        seen: set[str] = set()
+        frontier = [name]
+        while frontier:
+            rows = self._conn.execute(
+                f"SELECT DISTINCT to_name FROM edges WHERE from_name IN ({','.join('?' * len(frontier))})",
+                frontier,
+            ).fetchall()
+            frontier = [r["to_name"] for r in rows if r["to_name"] not in seen]
+            seen.update(frontier)
+        return sorted(seen)
+
+    # -- impls --------------------------------------------------------------
+
+    def upsert_impl(self, contract_name: str, impl_hash: str | None, path: str | None) -> None:
+        self._conn.execute(
+            "INSERT INTO impls(contract_name, impl_hash, path) VALUES(?,?,?) "
+            "ON CONFLICT(contract_name) DO UPDATE SET impl_hash=excluded.impl_hash, path=excluded.path",
+            (contract_name, impl_hash, path),
+        )
+        self._conn.commit()
+
+    # -- verifications ------------------------------------------------------
+
+    def record_verification(self, key: str, contract_name: str, status: str, summary: str) -> None:
+        self._conn.execute(
+            "INSERT INTO verifications(key, contract_name, status, summary, ran_at, stale) VALUES(?,?,?,?,?,0) "
+            "ON CONFLICT(key) DO UPDATE SET status=excluded.status, summary=excluded.summary, "
+            "ran_at=excluded.ran_at, stale=0",
+            (key, contract_name, status, summary, _now()),
+        )
+        self._conn.commit()
+
+    def get_verification(self, key: str) -> sqlite3.Row | None:
+        return self._conn.execute("SELECT * FROM verifications WHERE key=?", (key,)).fetchone()
+
+    def mark_stale(self, contract_names: list[str]) -> int:
+        if not contract_names:
+            return 0
+        cur = self._conn.execute(
+            f"UPDATE verifications SET stale=1 WHERE contract_name IN ({','.join('?' * len(contract_names))})",
+            contract_names,
+        )
+        self._conn.commit()
+        return cur.rowcount
+
+    def stale_verifications(self) -> list[str]:
+        return sorted({r["contract_name"] for r in self._conn.execute(
+            "SELECT DISTINCT contract_name FROM verifications WHERE stale=1")})
+
+    # -- counters -----------------------------------------------------------
+
+    def incr(self, name: str, by: int = 1) -> None:
+        self._conn.execute(
+            "INSERT INTO counters(name, value) VALUES(?,?) "
+            "ON CONFLICT(name) DO UPDATE SET value=value+excluded.value",
+            (name, by),
+        )
+        self._conn.commit()
+
+    def counters(self) -> dict[str, int]:
+        return {r["name"]: r["value"] for r in self._conn.execute("SELECT name, value FROM counters")}
+
+    def reset_counters(self) -> None:
+        self._conn.execute("DELETE FROM counters")
+        self._conn.commit()

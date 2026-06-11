@@ -1,0 +1,16 @@
+name: average_sale
+signature: "(sales: list[Sale]) -> float"
+deps: [Sale, included_sales]
+invariants:
+  - returns the arithmetic mean of amounts over included_sales only
+  - returns 0.0 when there are no included sales
+  - excluded sales affect neither the numerator nor the denominator
+examples:
+  - in: "[Sale(region='QLD', amount=10, completed=True), Sale(region='NSW', amount=20, completed=True), Sale(region='VIC', amount=None, completed=True)]"
+    out: "15.0"
+  - in: "[]"
+    out: "0.0"
+tests:
+  - tests/test_metrics.py::test_average_sale
+  - tests/test_metrics.py::test_average_sale_empty
+impl: src/metrics.py::average_sale

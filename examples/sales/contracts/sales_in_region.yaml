@@ -1,0 +1,12 @@
+name: sales_in_region
+signature: "(sales: list[Sale], region: Region) -> list[Sale]"
+deps: [Sale, Region, included_sales]
+invariants:
+  - result is the subset of included_sales whose region equals the given region
+  - preserves the input order of the kept sales
+  - returns an empty list when no included sale matches the region
+examples:
+  - in: "([Sale(region='QLD', amount=10, completed=True), Sale(region='NSW', amount=5, completed=True)], 'QLD')"
+    out: "[Sale(region='QLD', amount=10, completed=True)]"
+tests: [tests/test_filters.py::test_sales_in_region]
+impl: src/filters.py::sales_in_region

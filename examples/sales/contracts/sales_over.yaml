@@ -1,0 +1,12 @@
+name: sales_over
+signature: "(sales: list[Sale], threshold: float) -> list[Sale]"
+deps: [Sale, included_sales]
+invariants:
+  - result is the subset of included_sales whose amount is strictly greater than threshold
+  - a sale whose amount equals the threshold is excluded
+  - preserves the input order of the kept sales
+examples:
+  - in: "([Sale(region='QLD', amount=100, completed=True), Sale(region='QLD', amount=50, completed=True)], 50)"
+    out: "[Sale(region='QLD', amount=100, completed=True)]"
+tests: [tests/test_filters.py::test_sales_over]
+impl: src/filters.py::sales_over

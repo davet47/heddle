@@ -1,0 +1,16 @@
+name: segment_revenue_share
+signature: "(sales: list[Sale], customers: list[Customer]) -> dict[str, float]"
+deps: [Sale, Customer, revenue_by_segment, total_revenue]
+invariants:
+  - each value is that segment's revenue divided by total_revenue of all included sales
+  - returns an empty dict when total revenue is 0
+  - output keys are exactly the segments present in the customers list
+examples:
+  - in: "([Sale(region='QLD', amount=80, completed=True, customer_id='c1'), Sale(region='NSW', amount=20, completed=True, customer_id='c2')], [Customer(id='c1', name='Acme', segment='enterprise'), Customer(id='c2', name='Bolt', segment='smb')])"
+    out: "{'enterprise': 0.8, 'smb': 0.2}"
+  - in: "([], [Customer(id='c1', name='Acme', segment='enterprise')])"
+    out: "{}"
+tests:
+  - tests/test_customers.py::test_segment_revenue_share
+  - tests/test_customers.py::test_segment_revenue_share_zero_total
+impl: src/customers.py::segment_revenue_share

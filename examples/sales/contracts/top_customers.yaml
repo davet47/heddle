@@ -1,0 +1,14 @@
+name: top_customers
+signature: "(sales: list[Sale], n: int) -> list[tuple[str, float]]"
+deps: [Sale, revenue_by_customer]
+invariants:
+  - returns at most n (customer_id, revenue) pairs from revenue_by_customer
+  - pairs are ordered by revenue descending
+  - ties are broken by customer_id ascending
+examples:
+  - in: "([Sale(region='QLD', amount=50, completed=True, customer_id='c2'), Sale(region='NSW', amount=50, completed=True, customer_id='c1')], 2)"
+    out: "[('c1', 50.0), ('c2', 50.0)]"
+tests:
+  - tests/test_metrics.py::test_top_customers
+  - tests/test_metrics.py::test_top_customers_ties
+impl: src/metrics.py::top_customers

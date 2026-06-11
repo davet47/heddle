@@ -1,0 +1,13 @@
+name: revenue_by_segment
+signature: "(sales: list[Sale], customers: list[Customer]) -> dict[str, float]"
+deps: [Sale, Customer, revenue_by_customer, customers_by_segment]
+invariants:
+  - joins included sales to customers on customer_id and sums per segment
+  - output keys are exactly the segments present in the customers list
+  - a segment whose customers have no included sales maps to 0.0
+  - sales whose customer_id matches no customer are ignored
+examples:
+  - in: "([Sale(region='QLD', amount=80, completed=True, customer_id='c1'), Sale(region='NSW', amount=20, completed=True, customer_id='c2')], [Customer(id='c1', name='Acme', segment='enterprise'), Customer(id='c2', name='Bolt', segment='smb')])"
+    out: "{'enterprise': 80.0, 'smb': 20.0}"
+tests: [tests/test_customers.py::test_revenue_by_segment]
+impl: src/customers.py::revenue_by_segment

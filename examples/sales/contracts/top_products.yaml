@@ -1,0 +1,14 @@
+name: top_products
+signature: "(sales: list[Sale], products: list[Product], n: int) -> list[tuple[str, float]]"
+deps: [Sale, Product, revenue_by_product]
+invariants:
+  - returns at most n (product_id, revenue) pairs from revenue_by_product
+  - pairs are ordered by revenue descending
+  - ties are broken by product id ascending
+examples:
+  - in: "([Sale(region='QLD', amount=50, completed=True, product_id='p2'), Sale(region='QLD', amount=50, completed=True, product_id='p1')], [Product(id='p1', name='Widget', category='hardware'), Product(id='p2', name='Gadget', category='hardware')], 2)"
+    out: "[('p1', 50.0), ('p2', 50.0)]"
+tests:
+  - tests/test_products.py::test_top_products
+  - tests/test_products.py::test_top_products_ties
+impl: src/products.py::top_products

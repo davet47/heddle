@@ -1,0 +1,8 @@
+name: Region
+signature: "type alias: str (uppercase region code, e.g. 'QLD')"
+invariants:
+  - a region is a plain Python string
+  - region codes are uppercase, e.g. 'QLD', 'NSW', 'VIC'
+examples:
+  - in: "'QLD'"
+    out: "'QLD'"

@@ -1,0 +1,10 @@
+name: Product
+signature: "dataclass: Product(id: str, name: str, category: str)"
+invariants:
+  - all three fields are required strings with no defaults
+  - category is a free-form label such as 'hardware' or 'services'
+examples:
+  - in: "Product(id='p1', name='Widget', category='hardware')"
+    out: "Product(id='p1', name='Widget', category='hardware')"
+tests: [tests/test_types.py::test_product_constructor]
+impl: src/types.py::Product

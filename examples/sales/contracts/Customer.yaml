@@ -1,0 +1,10 @@
+name: Customer
+signature: "dataclass: Customer(id: str, name: str, segment: str)"
+invariants:
+  - all three fields are required strings with no defaults
+  - segment is a free-form label such as 'enterprise' or 'smb'
+examples:
+  - in: "Customer(id='c1', name='Acme Pty Ltd', segment='enterprise')"
+    out: "Customer(id='c1', name='Acme Pty Ltd', segment='enterprise')"
+tests: [tests/test_types.py::test_customer_constructor]
+impl: src/types.py::Customer

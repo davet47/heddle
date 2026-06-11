@@ -1,0 +1,13 @@
+name: revenue_by_region
+signature: "(sales: list[Sale]) -> dict[Region, float]"
+deps: [Sale, Region, included_sales]
+invariants:
+  - excludes sales where completed is false
+  - excludes sales with null amount
+  - output keys are exactly the regions present in included sales
+  - each value is the sum of included amounts for that region
+examples:
+  - in: "[Sale(region='QLD', amount=10, completed=True), Sale(region='QLD', amount=None, completed=True)]"
+    out: "{'QLD': 10.0}"
+tests: [tests/test_metrics.py::test_revenue_by_region]
+impl: src/metrics.py::revenue_by_region

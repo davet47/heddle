@@ -1,0 +1,12 @@
+name: Sale
+signature: "dataclass: Sale(region: Region, amount: float | None, completed: bool, customer_id: str = '', product_id: str = '')"
+deps: [Region]
+invariants:
+  - amount may be None for sales that have not settled
+  - customer_id and product_id default to the empty string
+  - positional field order is region, amount, completed, customer_id, product_id
+examples:
+  - in: "Sale(region='QLD', amount=10.0, completed=True)"
+    out: "Sale(region='QLD', amount=10.0, completed=True, customer_id='', product_id='')"
+tests: [tests/test_types.py::test_sale_constructor]
+impl: src/types.py::Sale

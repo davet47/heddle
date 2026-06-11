@@ -1,0 +1,12 @@
+name: revenue_by_customer
+signature: "(sales: list[Sale]) -> dict[str, float]"
+deps: [Sale, included_sales]
+invariants:
+  - sums amounts over included_sales only, keyed by customer_id
+  - output keys are exactly the customer_ids present in included sales
+  - values sum to total revenue of included sales
+examples:
+  - in: "[Sale(region='QLD', amount=10, completed=True, customer_id='c1'), Sale(region='NSW', amount=5, completed=True, customer_id='c1'), Sale(region='VIC', amount=99, completed=False, customer_id='c2')]"
+    out: "{'c1': 15.0}"
+tests: [tests/test_metrics.py::test_revenue_by_customer]
+impl: src/metrics.py::revenue_by_customer

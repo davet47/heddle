@@ -1,0 +1,15 @@
+name: included_sales
+signature: "(sales: list[Sale]) -> list[Sale]"
+deps: [Sale]
+invariants:
+  - keeps only sales where completed is true
+  - keeps only sales with a non-null amount
+  - preserves the input order of the kept sales
+  - never mutates the input list
+examples:
+  - in: "[Sale(region='QLD', amount=10, completed=True), Sale(region='NSW', amount=5, completed=False), Sale(region='VIC', amount=None, completed=True)]"
+    out: "[Sale(region='QLD', amount=10, completed=True)]"
+tests:
+  - tests/test_filters.py::test_included_sales
+  - tests/test_filters.py::test_included_sales_preserves_order
+impl: src/filters.py::included_sales

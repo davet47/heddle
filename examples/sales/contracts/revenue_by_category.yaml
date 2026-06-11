@@ -1,0 +1,12 @@
+name: revenue_by_category
+signature: "(sales: list[Sale], products: list[Product]) -> dict[str, float]"
+deps: [Sale, Product, revenue_by_product]
+invariants:
+  - aggregates revenue_by_product by each product's category
+  - output keys are exactly the categories that earned nonzero matched revenue
+  - values sum to the total of revenue_by_product values
+examples:
+  - in: "([Sale(region='QLD', amount=10, completed=True, product_id='p1'), Sale(region='NSW', amount=5, completed=True, product_id='p2')], [Product(id='p1', name='Widget', category='hardware'), Product(id='p2', name='Gadget', category='hardware')])"
+    out: "{'hardware': 15.0}"
+tests: [tests/test_products.py::test_revenue_by_category]
+impl: src/products.py::revenue_by_category

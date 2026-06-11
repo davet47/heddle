@@ -1,0 +1,16 @@
+name: revenue_share_by_region
+signature: "(sales: list[Sale]) -> dict[Region, float]"
+deps: [Sale, Region, revenue_by_region, total_revenue]
+invariants:
+  - each value is that region's revenue divided by total_revenue
+  - values sum to 1.0 whenever there is at least one included sale
+  - returns an empty dict when total revenue is 0
+examples:
+  - in: "[Sale(region='QLD', amount=75, completed=True), Sale(region='NSW', amount=25, completed=True)]"
+    out: "{'QLD': 0.75, 'NSW': 0.25}"
+  - in: "[Sale(region='QLD', amount=None, completed=True)]"
+    out: "{}"
+tests:
+  - tests/test_metrics.py::test_revenue_share_by_region
+  - tests/test_metrics.py::test_revenue_share_by_region_zero_total
+impl: src/metrics.py::revenue_share_by_region

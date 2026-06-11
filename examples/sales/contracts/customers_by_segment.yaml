@@ -1,0 +1,12 @@
+name: customers_by_segment
+signature: "(customers: list[Customer]) -> dict[str, list[Customer]]"
+deps: [Customer]
+invariants:
+  - output keys are exactly the segments present in the input
+  - every customer appears in exactly one group, the one for its segment
+  - within each group, customers keep their input order
+examples:
+  - in: "[Customer(id='c1', name='Acme', segment='enterprise'), Customer(id='c2', name='Bolt', segment='smb')]"
+    out: "{'enterprise': [Customer(id='c1', name='Acme', segment='enterprise')], 'smb': [Customer(id='c2', name='Bolt', segment='smb')]}"
+tests: [tests/test_customers.py::test_customers_by_segment]
+impl: src/customers.py::customers_by_segment

@@ -1,0 +1,12 @@
+name: total_revenue
+signature: "(sales: list[Sale]) -> float"
+deps: [Sale, included_sales]
+invariants:
+  - returns the sum of amounts over included_sales only
+  - returns 0.0 for an empty input or when no sale is included
+  - result is always a float
+examples:
+  - in: "[Sale(region='QLD', amount=100, completed=True), Sale(region='NSW', amount=50, completed=True), Sale(region='VIC', amount=25, completed=False)]"
+    out: "150.0"
+tests: [tests/test_metrics.py::test_total_revenue]
+impl: src/metrics.py::total_revenue

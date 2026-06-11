@@ -1,0 +1,12 @@
+name: revenue_by_product
+signature: "(sales: list[Sale], products: list[Product]) -> dict[str, float]"
+deps: [Sale, Product, included_sales]
+invariants:
+  - sums amounts over included_sales only, keyed by product_id
+  - output keys only ever include ids present in the given products list
+  - included sales referencing an unknown product_id are ignored
+examples:
+  - in: "([Sale(region='QLD', amount=10, completed=True, product_id='p1'), Sale(region='NSW', amount=5, completed=True, product_id='px')], [Product(id='p1', name='Widget', category='hardware')])"
+    out: "{'p1': 10.0}"
+tests: [tests/test_products.py::test_revenue_by_product]
+impl: src/products.py::revenue_by_product
