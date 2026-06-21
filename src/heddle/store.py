@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS edges(
     PRIMARY KEY(from_name, to_name));
 CREATE TABLE IF NOT EXISTS impls(
     contract_name TEXT PRIMARY KEY, impl_hash TEXT, path TEXT);
+CREATE TABLE IF NOT EXISTS impl_hash_cache(
+    impl_ref TEXT PRIMARY KEY, mtime_ns INTEGER NOT NULL, size INTEGER NOT NULL, impl_hash TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS verifications(
     key TEXT PRIMARY KEY, contract_name TEXT NOT NULL, status TEXT NOT NULL,
     summary TEXT NOT NULL DEFAULT '', ran_at TEXT NOT NULL, stale INTEGER NOT NULL DEFAULT 0);
@@ -115,6 +117,19 @@ class Store:
             "INSERT INTO impls(contract_name, impl_hash, path) VALUES(?,?,?) "
             "ON CONFLICT(contract_name) DO UPDATE SET impl_hash=excluded.impl_hash, path=excluded.path",
             (contract_name, impl_hash, path),
+        )
+        self._conn.commit()
+
+    # -- impl hash cache (keyed by file identity; speeds up status) ----------
+
+    def get_cached_impl_hash(self, impl_ref: str) -> sqlite3.Row | None:
+        return self._conn.execute("SELECT * FROM impl_hash_cache WHERE impl_ref=?", (impl_ref,)).fetchone()
+
+    def put_cached_impl_hash(self, impl_ref: str, mtime_ns: int, size: int, impl_hash: str) -> None:
+        self._conn.execute(
+            "INSERT INTO impl_hash_cache(impl_ref, mtime_ns, size, impl_hash) VALUES(?,?,?,?) "
+            "ON CONFLICT(impl_ref) DO UPDATE SET mtime_ns=excluded.mtime_ns, size=excluded.size, impl_hash=excluded.impl_hash",
+            (impl_ref, mtime_ns, size, impl_hash),
         )
         self._conn.commit()
 

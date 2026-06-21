@@ -109,3 +109,34 @@ def test_contract_removal_reindexes(project):
     result = index(root, store)
     assert result["removed"] == ["report"]
     assert store.contract_names() == ["Item", "total"]
+
+
+def test_status_caches_impl_hashes(project, monkeypatch):
+    root, store = project
+    calls = {"n": 0}
+    real = api.impl_hash
+
+    def counting(*a, **k):
+        calls["n"] += 1
+        return real(*a, **k)
+
+    monkeypatch.setattr(api, "impl_hash", counting)
+    api.status(root, store)
+    first = calls["n"]
+    assert first == 2  # total and report have impls; Item is spec-only
+    api.status(root, store)
+    assert calls["n"] == first  # second call served from the impl-hash cache
+
+
+def test_status_cache_invalidates_on_impl_edit(project):
+    root, store = project
+    api.verify(root, store, ["total", "report"])
+    assert api.status(root, store)["dirty"] == []  # warms the cache while green
+    calc = root / "src" / "calc.py"
+    # behaviour-preserving rewrite: changes the AST (and size), so the cached
+    # impl hash must invalidate and the now-unverified key shows up as dirty
+    calc.write_text(calc.read_text().replace(
+        "return sum(i.value for i in items if i.ok)",
+        "vals = [i.value for i in items if i.ok]\n    return sum(vals)",
+    ))
+    assert "total" in api.status(root, store)["dirty"]
