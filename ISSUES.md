@@ -17,5 +17,4 @@ the GitHub tracker once the repo has a remote.
 7. **PyPI release** — `pip install heddle` in the README assumes publication; cut 0.1.0 to PyPI.
 8. **README gif** — record the Claude Code → heddle demo loop.
 9. **Pre-existing stale bytecode** — the verification runner passes `-B` / `PYTHONDONTWRITEBYTECODE` so its own runs never cache bytecode, but a stale user-written `__pycache__` (same size, same mtime second) could still be loaded. Consider a `--no-pycache-trust` mode that clears `__pycache__` in the dep closure before running.
-10. **Contract names are global** — no namespacing/packages; collisions across folders are unhandled (one `contracts/` dir per project for now).
-11. **Name finalization** — "heddle" is a working name; rename is a find-and-replace.
+10. **Name finalization** — "heddle" is a working name; rename is a find-and-replace.

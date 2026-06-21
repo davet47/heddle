@@ -43,6 +43,21 @@ def contract_path(root: Path, name: str) -> Path:
     return contracts_dir(root) / f"{name}.yaml"
 
 
+def safe_contract_path(root: Path, name: str) -> Path:
+    """`contract_path`, refusing any name whose file resolves outside contracts/.
+
+    Defence in depth beyond `validate_name`'s string check: `resolve()` follows
+    symlinks, so a name pointing through a symlinked subdir can't escape the tree.
+    """
+    cdir = contracts_dir(root).resolve()
+    target = contract_path(root, name)
+    try:
+        target.resolve().relative_to(cdir)
+    except ValueError:
+        raise HeddleError("unsafe_name", f"contract name '{name}' resolves outside contracts/", contract=name)
+    return target
+
+
 def init_project(root: Path) -> list[str]:
     """Create .heddle/ and contracts/. Returns the paths created."""
     created = []

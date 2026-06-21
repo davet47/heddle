@@ -21,11 +21,15 @@ def index(root: Path, store: Store) -> dict:
     if not cdir.is_dir():
         raise HeddleError("no_contracts", f"'{cdir}' does not exist")
 
-    files = sorted(cdir.glob("*.yaml")) + sorted(cdir.glob("*.yml"))
+    # recurse: a subdirectory is a namespace, so contracts/billing/invoice.yaml
+    # is the contract `billing/invoice` (its name must match its path under cdir)
+    files = sorted(cdir.rglob("*.yaml")) + sorted(cdir.rglob("*.yml"))
     parsed: dict[str, tuple[dict, str]] = {}
     for f in files:
-        data = parse_contract(f.read_text(encoding="utf-8"), expect_name=f.stem)
-        parsed[data["name"]] = (data, f.read_text(encoding="utf-8"))
+        expect = f.relative_to(cdir).with_suffix("").as_posix()
+        text = f.read_text(encoding="utf-8")
+        data = parse_contract(text, expect_name=expect)
+        parsed[data["name"]] = (data, text)
 
     # two-pass: all names known before deps are validated
     for name, (data, _) in parsed.items():
