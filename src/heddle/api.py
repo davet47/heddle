@@ -121,6 +121,28 @@ def verify(
     return {"results": results}
 
 
+def cached_impl_hash(root: Path, store: Store, impl: str, contract: str | None = None) -> str:
+    """`impl_hash` memoised by (impl ref, file mtime_ns, size).
+
+    `status` computes an impl hash for every contract; re-reading and re-parsing
+    each file on every call is the O(n) cost in ISSUES #10. `verify` never uses
+    this — a stale *verification* is unsafe, so it always hashes fresh — but
+    `status` is informational, and mtime_ns makes a same-size-same-instant miss
+    vanishingly unlikely.
+    """
+    path = root / impl.partition("::")[0]
+    try:
+        st = path.stat()
+    except OSError:
+        return impl_hash(root, impl, contract=contract)  # absent file: let impl_hash raise cleanly
+    cached = store.get_cached_impl_hash(impl)
+    if cached is not None and cached["mtime_ns"] == st.st_mtime_ns and cached["size"] == st.st_size:
+        return cached["impl_hash"]
+    h = impl_hash(root, impl, contract=contract)
+    store.put_cached_impl_hash(impl, st.st_mtime_ns, st.st_size, h)
+    return h
+
+
 def status(root: Path, store: Store) -> dict:
     """Dirty contracts, stale verifications, cache hit-rate, token counters."""
     dirty: list[str] = []
@@ -129,7 +151,7 @@ def status(root: Path, store: Store) -> dict:
         if "impl" not in data:
             continue  # spec-only contracts don't need verification
         try:
-            ihash = impl_hash(root, data["impl"], contract=name)
+            ihash = cached_impl_hash(root, store, data["impl"], contract=name)
         except HeddleError:
             dirty.append(name)
             continue
