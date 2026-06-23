@@ -1,5 +1,6 @@
-"""Heddle: hash-keyed verification caching and content-addressed contracts
-for spec-driven development, exposed over MCP.
+"""Heddle treats software units as content-addressed contracts rather than
+files: contracts with a hash-keyed verification cache for spec-driven agent
+loops, exposed over MCP.
 
 Contracts are warp. Code is weft.
 """
