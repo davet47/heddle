@@ -1,0 +1,33 @@
+# Changelog
+
+All notable changes are documented here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to
+follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2026-06-23
+
+First public release, published to PyPI as `heddle-mcp` (the import name and CLI
+stay `heddle`).
+
+### Added
+- Content-addressed contracts: one hashable YAML file per software unit
+  (signature, invariants, examples, dependencies), with subdirectory namespaces.
+- Hash-keyed verification cache: a green test result keyed on the contract,
+  implementation, and transitive dependency hashes. pytest runs only on a miss;
+  failures are never served from cache.
+- Mechanical blast radius: `get_dependents` reports the exact set of invalidated
+  dependents, direct or transitive, by hash.
+- Five MCP tools (`get_contract`, `put_contract`, `get_dependents`, `verify`,
+  `status`) and five CLI commands (`init`, `index`, `serve`, `status`, `verify`).
+- Configurable verify interpreter and timeout via `heddle serve --python`,
+  `.heddle/config.json`, or an auto-detected project `.venv`.
+- `--no-pycache-trust` / `pycache_trust` to clear stale `__pycache__` before a
+  verify run.
+- Structured errors over MCP (no stack traces).
+- CI (tests on Python 3.10 through 3.13 plus the >5x benchmark guard) and PyPI
+  Trusted Publishing on version tags.
+
+[Unreleased]: https://github.com/davet47/heddle/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/davet47/heddle/releases/tag/v0.1.0
