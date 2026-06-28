@@ -4,6 +4,7 @@ hash; logic changes must."""
 import pytest
 
 from heddle.errors import HeddleError
+from heddle import implhash  # test_source_hash via module: a bare `test_*` import would be collected as a test
 from heddle.implhash import impl_hash
 
 BASE = '''
@@ -86,3 +87,45 @@ def test_syntax_error_raises(tmp_path):
     with pytest.raises(HeddleError) as exc:
         impl_hash(tmp_path, "mod.py::broken")
     assert exc.value.code == "impl_syntax_error"
+
+
+# --- test_source_hash: same normalised-AST stability, for the verification key ---
+
+
+def _twrite(tmp_path, body: str):
+    (tmp_path / "tests").mkdir(exist_ok=True)
+    (tmp_path / "tests" / "t.py").write_text(body)
+
+
+def test_test_source_hash_ignores_formatting_and_comments(tmp_path):
+    _twrite(tmp_path, "def test_a():\n    assert 1 == 1\n")
+    a = implhash.test_source_hash(tmp_path, ["tests/t.py::test_a"])
+    _twrite(tmp_path, "def test_a():\n    # a comment\n    assert 1 ==  1\n")
+    assert a == implhash.test_source_hash(tmp_path, ["tests/t.py::test_a"])
+
+
+def test_test_source_hash_changes_on_body_change(tmp_path):
+    _twrite(tmp_path, "def test_a():\n    assert 1 == 1\n")
+    a = implhash.test_source_hash(tmp_path, ["tests/t.py::test_a"])
+    _twrite(tmp_path, "def test_a():\n    assert 1 == 2\n")
+    assert a != implhash.test_source_hash(tmp_path, ["tests/t.py::test_a"])
+
+
+def test_test_source_hash_is_order_independent(tmp_path):
+    _twrite(tmp_path, "def test_a():\n    assert 1\n\n\ndef test_b():\n    assert 2\n")
+    h1 = implhash.test_source_hash(tmp_path, ["tests/t.py::test_a", "tests/t.py::test_b"])
+    h2 = implhash.test_source_hash(tmp_path, ["tests/t.py::test_b", "tests/t.py::test_a"])
+    assert h1 == h2
+
+
+def test_test_source_hash_unresolvable_id_does_not_raise(tmp_path):
+    h = implhash.test_source_hash(tmp_path, ["tests/absent.py::test_x"])
+    assert isinstance(h, str) and len(h) == 64
+
+
+def test_test_source_hash_resolves_parametrised_id(tmp_path):
+    _twrite(tmp_path, "def test_a():\n    assert 1\n")
+    before = implhash.test_source_hash(tmp_path, ["tests/t.py::test_a[case1]"])
+    _twrite(tmp_path, "def test_a():\n    assert 2\n")
+    # the [case1] suffix is stripped and the function body hashed, so it changed
+    assert before != implhash.test_source_hash(tmp_path, ["tests/t.py::test_a[case1]"])

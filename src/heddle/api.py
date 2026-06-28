@@ -13,7 +13,7 @@ import yaml
 from .config import resolve_python
 from .contract import contract_hash, parse_contract
 from .errors import HeddleError, unknown_name
-from .implhash import impl_hash
+from .implhash import impl_hash, test_source_hash
 from .project import atomic_write_text, case_collision, contract_lock, safe_contract_path
 from .store import Store
 from .verify import clear_pycache, verification_key, verify_one
@@ -168,7 +168,8 @@ def status(root: Path, store: Store) -> dict:
         except HeddleError:
             dirty.append(name)
             continue
-        v = store.get_verification(verification_key(store, name, ihash))
+        thash = test_source_hash(root, data.get("tests", []))
+        v = store.get_verification(verification_key(store, name, ihash, thash))
         if v is None or v["status"] != "pass" or v["stale"]:
             dirty.append(name)
 

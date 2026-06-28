@@ -19,7 +19,7 @@ import yaml
 from . import tokens
 from .config import resolve_python, resolve_timeout
 from .errors import HeddleError, unknown_name
-from .implhash import impl_hash
+from .implhash import impl_hash, test_source_hash
 from .store import Store
 
 SUMMARY_MAX_TOKENS = 40
@@ -49,14 +49,14 @@ def clear_pycache(root: Path) -> int:
     return removed
 
 
-def verification_key(store: Store, name: str, ihash: str) -> str:
+def verification_key(store: Store, name: str, ihash: str, thash: str) -> str:
     row = store.get_contract(name)
     if row is None:
         raise unknown_name("unknown_contract", name, store.contract_names())
     chash = row["hash"]
     hashes = store.contract_hashes()
     dep_part = ",".join(f"{d}={hashes[d]}" for d in store.transitive_deps(name) if d in hashes)
-    raw = f"contract={chash}|impl={ihash}|deps={dep_part}"
+    raw = f"contract={chash}|impl={ihash}|tests={thash}|deps={dep_part}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -121,7 +121,8 @@ def verify_one(
 
     ihash = impl_hash(root, data["impl"], contract=name)  # always fresh from disk
     store.upsert_impl(name, ihash, data["impl"].partition("::")[0])
-    key = verification_key(store, name, ihash)
+    thash = test_source_hash(root, data["tests"])  # test source is part of the key (#18)
+    key = verification_key(store, name, ihash, thash)
 
     store.incr("verify_requests")
     cached = store.get_verification(key)
