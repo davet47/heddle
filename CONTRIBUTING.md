@@ -13,7 +13,8 @@ surface needs a conversation first, so please open an issue before writing it.
 
 ## Development
 
-Requires Python >= 3.10 and [uv](https://docs.astral.sh/uv/).
+Requires Python >= 3.10 and [uv](https://docs.astral.sh/uv/). A Go toolchain is
+optional: the Go-adapter tests use it and skip without it.
 
 ```bash
 uv sync
