@@ -50,6 +50,33 @@ def test_formatting_only_impl_change_stays_cached(project):
     assert statuses(api.verify(root, store, ["total"])) == {"total": "cached-pass"}
 
 
+def test_test_source_change_busts_cache_for_that_unit_only(project):
+    root, store = project
+    api.verify(root, store, ["total", "report"])
+    tfile = root / "tests" / "test_calc.py"
+    # change test_total's body (a stricter assertion); test_report untouched
+    tfile.write_text(tfile.read_text().replace(
+        "assert total([Item(2.0, True), Item(3.0, False)]) == 2.0",
+        "assert total([Item(2.0, True), Item(3.0, False)]) == 2.0\n    assert total([]) == 0.0",
+    ))
+    assert statuses(api.verify(root, store, ["total", "report"])) == {
+        "total": "pass",            # its own test source changed -> re-run
+        "report": "cached-pass",
+    }
+
+
+def test_formatting_only_test_change_stays_cached(project):
+    root, store = project
+    api.verify(root, store, ["total"])
+    tfile = root / "tests" / "test_calc.py"
+    # add a comment and reflow inside test_total; behaviour identical
+    tfile.write_text(tfile.read_text().replace(
+        "def test_total():\n    assert total([Item(2.0, True), Item(3.0, False)]) == 2.0",
+        "def test_total():\n    # reformatted, same assertion\n    assert total(\n        [Item(2.0, True), Item(3.0, False)]\n    ) == 2.0",
+    ))
+    assert statuses(api.verify(root, store, ["total"])) == {"total": "cached-pass"}
+
+
 def test_dep_contract_change_busts_dependent_cache(project):
     root, store = project
     api.verify(root, store, ["total", "report"])
