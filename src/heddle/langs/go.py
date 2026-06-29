@@ -21,6 +21,7 @@ from . import SUMMARY_MAX_TOKENS
 
 _GOHASH_DIR = Path(__file__).parent / "gohash"
 _GO_FILE_LINE = re.compile(r"[^\s:]+\.go:\d+:")  # a `file.go:NN:` location in test output
+_GO_VERSION = re.compile(r"go version go(\S+)")  # `go version go1.21.5 darwin/arm64`
 
 
 def _oneline(s: str) -> str:
@@ -30,6 +31,7 @@ def _oneline(s: str) -> str:
 class GoAdapter:
     def __init__(self) -> None:
         self._go_cache: dict[tuple[str, str | None], str] = {}
+        self._id_cache: dict[tuple[str, str | None], str] = {}
 
     # -- toolchain ----------------------------------------------------------
 
@@ -52,6 +54,24 @@ class GoAdapter:
             raise HeddleError("bad_toolchain", f"'{cand}' is not a working Go toolchain")
         self._go_cache[key] = cand
         return cand
+
+    def toolchain_identity(self, root: Path, override: str | None = None) -> str:
+        key = (str(root), override)
+        if key in self._id_cache:
+            return self._id_cache[key]
+        go = self._go(root, override)
+        try:
+            proc = subprocess.run(
+                [go, "version"], capture_output=True, text=True, check=True, timeout=30,
+                env={**os.environ, "GOTOOLCHAIN": "local"},
+            )
+        except (OSError, subprocess.SubprocessError):
+            raise HeddleError("bad_toolchain", f"could not read the Go version from '{go}'")
+        m = _GO_VERSION.search(proc.stdout)
+        # version only (drop the trailing GOOS/GOARCH) so cross-OS greens share
+        ident = f"go {m.group(1)}" if m else f"go {_oneline(proc.stdout)}"
+        self._id_cache[key] = ident
+        return ident
 
     # -- hashing (via the go/ast helper) ------------------------------------
 

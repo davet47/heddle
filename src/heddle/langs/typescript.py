@@ -40,6 +40,7 @@ def _oneline(s: str) -> str:
 class TypeScriptAdapter:
     def __init__(self) -> None:
         self._node_cache: dict[tuple[str, str | None], str] = {}
+        self._id_cache: dict[tuple[str, str | None], str] = {}
 
     # -- toolchain ----------------------------------------------------------
 
@@ -62,6 +63,26 @@ class TypeScriptAdapter:
             raise HeddleError("bad_toolchain", f"'{cand}' is not a working Node.js toolchain")
         self._node_cache[key] = cand
         return cand
+
+    def toolchain_identity(self, root: Path, override: str | None = None) -> str:
+        key = (str(root), override)
+        if key in self._id_cache:
+            return self._id_cache[key]
+        node = self._node(root, override)
+        try:
+            nv = subprocess.run(
+                [node, "--version"], capture_output=True, text=True, check=True, timeout=30
+            ).stdout.strip().lstrip("v")
+            # the project's own typescript (resolved from root, like the hasher)
+            tv = subprocess.run(
+                [node, "-p", "require('typescript').version"],
+                cwd=root, capture_output=True, text=True, check=True, timeout=30,
+            ).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            raise HeddleError("bad_toolchain", f"could not read node/typescript versions via '{node}'")
+        ident = f"node {nv} ts {tv}"
+        self._id_cache[key] = ident
+        return ident
 
     # -- hashing (via the tshash helper) ------------------------------------
 
