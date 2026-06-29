@@ -176,8 +176,14 @@ def status(root: Path, store: Store) -> dict:
         except HeddleError:
             dirty.append(name)
             continue
-        thash = adapter_for(data["impl"]).test_source_hash(root, data.get("tests", []))
-        v = store.get_verification(verification_key(store, name, ihash, thash))
+        adapter = adapter_for(data["impl"])
+        thash = adapter.test_source_hash(root, data.get("tests", []))
+        try:
+            tid = adapter.toolchain_identity(root)  # same key component verify stored
+        except HeddleError:
+            dirty.append(name)  # can't resolve the toolchain -> can't claim a green
+            continue
+        v = store.get_verification(verification_key(store, name, ihash, thash, tid))
         if v is None or v["status"] != "pass" or v["stale"]:
             dirty.append(name)
 

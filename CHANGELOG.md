@@ -13,9 +13,13 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   configured per project via `.heddle/config.json` `{"shared": {"url","token"}}`,
   with **no change to the 5 MCP tools / 5 CLI commands** (the cache server is an
   operational process, not a subcommand). A shared-store outage degrades silently
-  to local verify. Cross-machine greens currently assume a shared toolchain;
-  pinning the toolchain in the verification key is the next step (see
-  docs/hosted-store.md).
+  to local verify. Cross-machine greens are made sound by the toolchain-in-key
+  change below.
+- Toolchain in the verification key: the key now folds in a per-language toolchain
+  identity (`python 3.11.7` / `go 1.21.5` / `node <v> ts <v>`), so a shared or
+  cross-machine green is trusted only when the toolchain version matches —
+  otherwise it re-runs. Version-only (no OS/arch), so a CI(Linux) green still
+  serves a Mac/Windows dev. One-time: existing greens re-verify once on upgrade.
 - Semantic diff in `put_contract`: the response carries a `diff` of what changed
   versus the prior contract (signature, deps, invariants, examples, impl/tests).
 - Test source in the verification key (#18): editing a test's body now forces a

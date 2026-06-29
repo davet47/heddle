@@ -46,14 +46,15 @@ change), and the shared store is local-file only. Wiring is below.
 2. **Auth** *(partially shipped)*. A single shared bearer token gates the server
    (constant-time `hmac.compare_digest`). Still deferred: a *stronger* check on the
    publish path than the read path, and per-project/team tokens.
-3. **Trust model.** Who may publish a green? A shared stale-green is worse than a
-   solo one, which is why test source is already in the verification key (#18):
-   a verdict is only as portable as its key is complete. A hosted store should
-   also pin the resolved toolchain in the key before trusting a cross-machine
-   green. **This is the next slice:** until it lands, a hosted green is sound only
-   across machines sharing the contract's toolchain (same Python/Go/Node + deps);
-   the plan is a new `LanguageAdapter.toolchain_identity()` folded into
-   `verification_key`.
+3. ✓ **Trust: toolchain in the key (shipped).** A shared stale-green is worse than
+   a solo one, which is why test source is already in the verification key (#18):
+   a verdict is only as portable as its key is complete. The key now also folds in
+   a **toolchain identity** (`LanguageAdapter.toolchain_identity()` — `python
+   3.11.7` / `go 1.21.5` / `node <v> ts <v>`), so a cross-machine green is trusted
+   only when the toolchain version matches; otherwise the key differs and the test
+   re-runs. Grain is **version-only** (no OS/arch) so a CI(Linux) green still serves
+   a dev on Mac/Windows. Not yet in the identity: the dependency set (pip freeze /
+   lockfile) and OS/arch — a deeper soundness knob if cross-platform drift bites.
 4. **Concurrent writers.** The local `fcntl` lock (see `project.py`) becomes a
    server-side concern: transactional upserts and last-writer-wins or CAS on the
    verdict rows. (The current server is single-threaded, so writes already

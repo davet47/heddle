@@ -1,8 +1,11 @@
 """Hash-keyed verification: run pytest only on cache misses.
 
-Verification key = sha256 over (contract_hash, impl_hash, transitive dep
-contract hashes). A cached green result is valid iff the full key matches —
-any contract edit anywhere in the dependency closure produces a new key.
+Verification key = sha256 over (contract_hash, impl_hash, test-source hash,
+toolchain identity, transitive dep contract hashes). A cached green result is
+valid iff the full key matches — any contract edit anywhere in the dependency
+closure, a test-body edit, or a toolchain version change produces a new key. The
+toolchain component is what makes a shared/cross-machine green sound rather than
+merely present (a 3.11 green is not served to 3.13).
 """
 
 from __future__ import annotations
@@ -47,14 +50,14 @@ def clear_pycache(root: Path) -> int:
     return removed
 
 
-def verification_key(store: Store, name: str, ihash: str, thash: str) -> str:
+def verification_key(store: Store, name: str, ihash: str, thash: str, toolchain: str) -> str:
     row = store.get_contract(name)
     if row is None:
         raise unknown_name("unknown_contract", name, store.contract_names())
     chash = row["hash"]
     hashes = store.contract_hashes()
     dep_part = ",".join(f"{d}={hashes[d]}" for d in store.transitive_deps(name) if d in hashes)
-    raw = f"contract={chash}|impl={ihash}|tests={thash}|deps={dep_part}"
+    raw = f"contract={chash}|impl={ihash}|tests={thash}|toolchain={toolchain}|deps={dep_part}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -121,7 +124,8 @@ def verify_one(
     ihash = adapter.impl_hash(root, data["impl"], contract=name)  # always fresh from disk
     store.upsert_impl(name, ihash, data["impl"].partition("::")[0])
     thash = adapter.test_source_hash(root, data["tests"])  # test source is part of the key (#18)
-    key = verification_key(store, name, ihash, thash)
+    tid = adapter.toolchain_identity(root, override=python)  # toolchain in the key: sound cross-machine greens
+    key = verification_key(store, name, ihash, thash, tid)
 
     store.incr("verify_requests")
     cached = store.get_verification(key)
