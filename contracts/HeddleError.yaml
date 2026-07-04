@@ -6,4 +6,4 @@ invariants:
   - codes are short snake_case machine keys; messages are one human line
 tests: [tests/test_mcp_e2e.py::test_errors_are_structured_over_stdio]
 impl: src/heddle/errors.py::HeddleError
-status: inferred
+status: confirmed

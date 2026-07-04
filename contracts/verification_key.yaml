@@ -9,4 +9,4 @@ tests:
   - tests/test_toolchain_key.py::test_verification_key_includes_the_toolchain
   - tests/test_toolchain_key.py::test_toolchain_change_busts_cache_and_status_agrees
 impl: src/heddle/verify.py::verification_key
-status: inferred
+status: confirmed

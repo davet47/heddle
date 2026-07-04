@@ -10,4 +10,4 @@ tests:
   - tests/test_store_and_api.py::test_get_contract_unknown_suggests_nearest
   - tests/test_store_and_api.py::test_get_contract_carries_status_and_flags_inferred_deps
 impl: src/heddle/api.py::get_contract
-status: inferred
+status: confirmed

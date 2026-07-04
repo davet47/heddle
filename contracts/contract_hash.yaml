@@ -17,4 +17,4 @@ tests:
   - tests/test_contract_hash.py::test_signature_change_changes_hash
   - tests/test_contract_hash.py::test_example_change_changes_hash
 impl: src/heddle/contract.py::contract_hash
-status: inferred
+status: confirmed

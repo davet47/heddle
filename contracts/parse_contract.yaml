@@ -13,4 +13,4 @@ tests:
   - tests/test_contract_hash.py::test_name_mismatch_rejected
   - tests/test_contract_hash.py::test_invalid_status_rejected
 impl: src/heddle/contract.py::parse_contract
-status: inferred
+status: confirmed
