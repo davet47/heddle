@@ -43,6 +43,13 @@ Same three regeneration tasks on a 20-contract sample project, once with raw fil
 
 Raw mode counts what a file-based agent reads per task: the unit's spec file, every transitive dep's spec file, every source module in the dep closure, the unit's test file, and the output of running the suite. It is deliberately generous to the baseline: it assumes the agent already knows the exact dependency closure, which is precisely the thing heddle computes for you.
 
+The same methodology on a real project scores higher, not lower: a 43-contract
+energy digital twin — built with heddle but not for it — measures **9.1×**
+across a full sweep of every unit (median 7.9×, up to ~40× on the deepest
+units), because real dependency structure runs deeper than a demo's. All the
+numbers, their distributions, and the honest caveats live in
+[docs/benchmarks.md](docs/benchmarks.md).
+
 ## Quickstart
 
 ```bash
