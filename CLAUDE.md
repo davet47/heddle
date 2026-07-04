@@ -26,6 +26,29 @@ documents "the entire surface"; if a change would add to it, stop and confirm.
 (The shared-cache backend `python -m heddle.cache_server` is a deliberate
 *operational* process, not a 6th CLI command — the client surface stays 5/5.)
 
+## Heddle develops on heddle
+
+The repo is itself a heddle project: `contracts/` holds contracts for the
+stable seams (the five `api.py` functions, the `contract.py` hashing trio,
+`impl_hash`, `verification_key`, `HeddleError`, the `Store` Protocol). The
+workflow from [docs/getting-started.md](docs/getting-started.md) applies here:
+
+- **Before changing a contracted seam**, check the blast radius (the
+  `get_dependents` MCP tool when connected — it is not a CLI command);
+  **after touching one**, `uv run heddle verify --radius <name>` must return
+  `ok: true` — that is the inner-loop gate.
+- **A new stable seam gets a contract before its implementation.** If you (the
+  agent) derived the contract rather than the user specifying it, mark it
+  `status: inferred`; the user flips it to `confirmed` on review. `heddle
+  status` lists the review queue.
+- **Do not contract churning interiors.** `remote.py`, `cache_server.py`, and
+  `shared.py` are deliberately uncontracted while the v0.3 hosted-store work
+  reshapes them; helpers (`tokens.py`, `project.py`) are weft. Pinning
+  interiors is the failure mode the README warns about.
+- **The heddle gate layers on the DoD — it never replaces it.** Full
+  `uv run pytest` and the benchmark below remain the definition of done;
+  heddle's cached verify must not be the only thing vouching for heddle.
+
 ## Definition of done: >5x token reduction
 
 `bench/benchmark.py` is the DoD guard — it exits nonzero below 5x (currently

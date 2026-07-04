@@ -1,0 +1,20 @@
+name: contract_hash
+signature: "(data: dict) -> str"
+deps: [parse_contract]
+invariants:
+  - sha256 over the canonical form — keys sorted, whitespace collapsed, deps sorted, example order preserved
+  - impl, tests, invariants, and status are excluded — cosmetic and provenance edits never invalidate
+  - signature and example changes are meaning — they must change the hash
+examples:
+  - in: "the same contract reformatted, reordered, commented"
+    out: "the identical hash"
+tests:
+  - tests/test_contract_hash.py::test_identical_text_same_hash
+  - tests/test_contract_hash.py::test_key_order_does_not_change_hash
+  - tests/test_contract_hash.py::test_deps_order_does_not_change_hash
+  - tests/test_contract_hash.py::test_invariant_wording_does_not_change_hash
+  - tests/test_contract_hash.py::test_status_does_not_change_hash
+  - tests/test_contract_hash.py::test_signature_change_changes_hash
+  - tests/test_contract_hash.py::test_example_change_changes_hash
+impl: src/heddle/contract.py::contract_hash
+status: inferred

@@ -1,0 +1,15 @@
+name: diff_contracts
+signature: "(old: dict, new: dict) -> dict"
+deps: [parse_contract]
+invariants:
+  - normalises exactly as the hash does, so a cosmetic-only edit yields an empty diff
+  - unhashed-but-real changes (impl, tests, status) are still reported
+  - deps compare as sets; invariant and example reorders report reordered, not churn
+tests:
+  - tests/test_semantic_diff.py::test_signature_change
+  - tests/test_semantic_diff.py::test_deps_added_removed_but_reorder_is_not_meaning
+  - tests/test_semantic_diff.py::test_impl_and_tests_reported_though_excluded_from_hash
+  - tests/test_semantic_diff.py::test_status_flip_reported_though_excluded_from_hash
+  - tests/test_semantic_diff.py::test_cosmetic_only_edit_is_empty
+impl: src/heddle/contract.py::diff_contracts
+status: inferred
