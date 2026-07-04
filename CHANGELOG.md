@@ -6,6 +6,17 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- A benchmark scorecard, `docs/benchmarks.md`: every token-reduction number in
+  one place — the sales-example DoD gate (5.4×), the enora-twin real-project
+  full sweep (9.1× across 43 contracts, median 7.9×, run under heddle 0.3.0),
+  live cache-economics counters from both dogfood stores, and the concessions
+  any public claim should carry (closure knowledge granted free to the
+  baseline; first-try-green assumed for heddle; per-change estimate, not a
+  session total; initial build costs more). Ratios are deterministic tiktoken
+  counts, so the driving model is recorded as run provenance, not a variable.
+  The README's "The number" section links to it.
+
 ## [0.3.0] - 2026-07-04
 
 Theme: adoption. Everything a first-time visitor needs that the engine
