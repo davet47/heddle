@@ -1,0 +1,18 @@
+name: impl_hash
+signature: "(root: Path, impl: str, contract: str | None = None) -> str"
+deps: [HeddleError]
+invariants:
+  - sha256 over the normalised AST of the named def — formatting, comments, and docstrings never change it
+  - logic changes must change it
+  - surrounding code in the same file is invisible; dotted quals resolve class members
+  - a missing file or name raises impl_not_found, never a KeyError
+tests:
+  - tests/test_implhash.py::test_comments_do_not_change_hash
+  - tests/test_implhash.py::test_docstring_does_not_change_hash
+  - tests/test_implhash.py::test_formatting_does_not_change_hash
+  - tests/test_implhash.py::test_surrounding_code_does_not_change_hash
+  - tests/test_implhash.py::test_logic_change_changes_hash
+  - tests/test_implhash.py::test_class_and_method_resolution
+  - tests/test_implhash.py::test_missing_function_raises
+impl: src/heddle/implhash.py::impl_hash
+status: inferred

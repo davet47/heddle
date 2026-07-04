@@ -1,0 +1,17 @@
+name: put_contract
+signature: "(root: Path, store: Store, name: str, yaml_text: str) -> dict"
+deps: [parse_contract, contract_hash, diff_contracts, Store, HeddleError]
+invariants:
+  - validates before writing — unknown deps, self-deps, name collisions, and escapes of contracts/ all refuse
+  - writes the file atomically and updates the store under a per-name lock, never leaving the two disagreeing
+  - a hash change marks the transitive dependents stale and names them in the response
+  - a cosmetic-only edit is changed false, invalidates nothing
+  - the response carries a semantic diff, and advisory inferred flags when provenance is unconfirmed
+tests:
+  - tests/test_store_and_api.py::test_put_contract_writes_file_and_invalidates
+  - tests/test_store_and_api.py::test_put_contract_unchanged_content_invalidates_nothing
+  - tests/test_store_and_api.py::test_put_contract_rejects_unknown_dep
+  - tests/test_store_and_api.py::test_put_contract_rejects_self_dep
+  - tests/test_store_and_api.py::test_put_contract_flags_inferred_writes_and_dependents
+impl: src/heddle/api.py::put_contract
+status: inferred

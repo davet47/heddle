@@ -1,0 +1,12 @@
+name: get_dependents
+signature: "(root: Path, store: Store, name: str, transitive: bool = False) -> dict"
+deps: [Store, HeddleError]
+invariants:
+  - the blast-radius query — who is invalidated if this contract changes, by mechanism not convention
+  - direct by default; transitive walks the full closure
+  - every dependent carries its current 12-char hash; inferred ones an advisory flag
+tests:
+  - tests/test_store_and_api.py::test_get_dependents
+  - tests/test_store_and_api.py::test_get_dependents_flags_inferred
+impl: src/heddle/api.py::get_dependents
+status: inferred

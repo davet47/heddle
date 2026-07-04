@@ -7,6 +7,13 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Heddle develops on heddle: the repo is now itself a heddle project —
+  `contracts/` holds 12 contracts over the stable seams (the five `api.py`
+  tool functions, the hashing trio, `impl_hash`, `verification_key`,
+  `HeddleError`, the `Store` Protocol), bound to the existing test suite and
+  born `status: inferred` pending human review. `heddle verify --radius` is
+  the inner-loop gate for changes to contracted seams; the full pytest suite
+  and the benchmark remain the definition of done.
 - A getting-started walkthrough, `docs/getting-started.md`: how a human and an
   agent build a package contract-first — setup, the CLAUDE.md working rules to
   give the agent, the inferred→confirmed review loop, and the `verify --radius`
