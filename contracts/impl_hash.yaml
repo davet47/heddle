@@ -15,4 +15,4 @@ tests:
   - tests/test_implhash.py::test_class_and_method_resolution
   - tests/test_implhash.py::test_missing_function_raises
 impl: src/heddle/implhash.py::impl_hash
-status: inferred
+status: confirmed

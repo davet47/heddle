@@ -16,4 +16,4 @@ tests:
   - tests/test_verify.py::test_verify_flags_inferred_closure_even_on_cached_pass
   - tests/test_verify.py::test_confirming_inferred_contract_keeps_cached_green
 impl: src/heddle/api.py::verify
-status: inferred
+status: confirmed

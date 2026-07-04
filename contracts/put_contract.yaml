@@ -14,4 +14,4 @@ tests:
   - tests/test_store_and_api.py::test_put_contract_rejects_self_dep
   - tests/test_store_and_api.py::test_put_contract_flags_inferred_writes_and_dependents
 impl: src/heddle/api.py::put_contract
-status: inferred
+status: confirmed

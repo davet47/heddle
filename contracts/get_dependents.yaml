@@ -9,4 +9,4 @@ tests:
   - tests/test_store_and_api.py::test_get_dependents
   - tests/test_store_and_api.py::test_get_dependents_flags_inferred
 impl: src/heddle/api.py::get_dependents
-status: inferred
+status: confirmed

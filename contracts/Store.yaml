@@ -10,4 +10,4 @@ tests:
   - tests/test_store_and_api.py::test_reindex_is_stable
   - tests/test_store_and_api.py::test_put_blob_is_content_addressed_and_round_trips
 impl: src/heddle/store.py::Store
-status: inferred
+status: confirmed

@@ -12,4 +12,4 @@ tests:
   - tests/test_semantic_diff.py::test_status_flip_reported_though_excluded_from_hash
   - tests/test_semantic_diff.py::test_cosmetic_only_edit_is_empty
 impl: src/heddle/contract.py::diff_contracts
-status: inferred
+status: confirmed

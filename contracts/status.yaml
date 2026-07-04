@@ -11,4 +11,4 @@ tests:
   - tests/test_verify.py::test_status_reports_wasted_rechecks
   - tests/test_store_and_api.py::test_status_lists_inferred_including_spec_only
 impl: src/heddle/api.py::status
-status: inferred
+status: confirmed
