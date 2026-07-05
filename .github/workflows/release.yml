@@ -22,6 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check the tag matches __version__
+        # The whole chain assumes it: PyPI publishes __version__ (hatchling
+        # dynamic version) while the mcp-registry job stamps server.json from
+        # the tag. Fail fast instead of publishing two different versions.
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          PKG=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' src/heddle/__init__.py)
+          [ "$TAG" = "$PKG" ] || { echo "tag v$TAG != __version__ $PKG" >&2; exit 1; }
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
