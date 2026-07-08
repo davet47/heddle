@@ -1,0 +1,12 @@
+name: grossCents
+signature: "static int grossCents(Employee employee, TimeSheet sheet)"
+deps: [Employee, TimeSheet, overtimeHours]
+invariants:
+  - regular hours at rate, overtime at time-and-a-half, integer-floored per term
+examples:
+  - in: "rate 2000c, 45 hours"
+    out: "95000"
+tests:
+  - src/test/java/payroll/PayTest.java::grossPaysRegularHoursAtRate
+  - src/test/java/payroll/PayTest.java::grossPaysOvertimeAtTimeAndAHalf
+impl: src/main/java/payroll/Pay.java::Pay.grossCents

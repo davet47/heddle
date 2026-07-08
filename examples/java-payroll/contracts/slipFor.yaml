@@ -1,0 +1,11 @@
+name: slipFor
+signature: "static PaySlip slipFor(Employee employee, TimeSheet sheet)"
+deps: [Employee, TimeSheet, PaySlip, grossCents, withholdingCents, netCents]
+invariants:
+  - the whole pipeline for one employee — gross, withholding, net, in one slip
+examples:
+  - in: "rate 2000c, 45 hours"
+    out: "PaySlip(e1, 95000, 14000, 81000)"
+tests:
+  - src/test/java/payroll/PayrollTest.java::slipRunsTheWholePipeline
+impl: src/main/java/payroll/Payroll.java::Payroll.slipFor

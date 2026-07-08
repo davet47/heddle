@@ -1,0 +1,11 @@
+name: withholdingCents
+signature: "static int withholdingCents(int grossCents)"
+invariants:
+  - progressive weekly brackets — 10% to 50000c, 20% to 100000c, 30% above — floored per bracket
+  - monotonic — more gross never withholds less
+examples:
+  - in: "95000"
+    out: "14000"
+tests:
+  - src/test/java/payroll/TaxTest.java::withholdsProgressivelyByBracket
+impl: src/main/java/payroll/Tax.java::Tax.withholdingCents

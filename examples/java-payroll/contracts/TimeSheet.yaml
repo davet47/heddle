@@ -1,0 +1,10 @@
+name: TimeSheet
+signature: "record TimeSheet(String employeeId, int hoursWorked)"
+invariants:
+  - whole hours for one week; overtime accounting happens in Pay, not here
+examples:
+  - in: "e1 worked 45 hours"
+    out: "TimeSheet(e1, 45)"
+tests:
+  - src/test/java/payroll/TypesTest.java::timeSheetRecordsWholeHoursForOneWeek
+impl: src/main/java/payroll/TimeSheet.java::TimeSheet

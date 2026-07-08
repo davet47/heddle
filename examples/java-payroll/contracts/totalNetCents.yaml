@@ -1,0 +1,11 @@
+name: totalNetCents
+signature: "static int totalNetCents(List<PaySlip> slips)"
+deps: [PaySlip]
+invariants:
+  - what the run pays out in total; an empty run totals zero
+examples:
+  - in: "slips netting 81000 and 21600"
+    out: "102600"
+tests:
+  - src/test/java/payroll/PayrollTest.java::totalNetSumsEverySlip
+impl: src/main/java/payroll/Payroll.java::Payroll.totalNetCents

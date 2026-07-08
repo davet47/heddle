@@ -1,0 +1,10 @@
+name: Employee
+signature: "record Employee(String id, String name, int hourlyRateCents)"
+invariants:
+  - money is integer cents everywhere in this project — no floats touch currency
+examples:
+  - in: "id e1, Ada, 2000c per hour"
+    out: "an Employee value; equal to any Employee with the same fields"
+tests:
+  - src/test/java/payroll/TypesTest.java::employeeCarriesAnHourlyRateInCents
+impl: src/main/java/payroll/Employee.java::Employee
