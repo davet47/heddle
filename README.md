@@ -43,8 +43,8 @@ Same three regeneration tasks on a 20-contract sample project, once with raw fil
 
 Raw mode counts what a file-based agent reads per task: the unit's spec file, every transitive dep's spec file, every source module in the dep closure, the unit's test file, and the output of running the suite. It is deliberately generous to the baseline: it assumes the agent already knows the exact dependency closure, which is precisely the thing heddle computes for you.
 
-The same methodology sweeps *every* unit of all three example projects —
-Python, Go, and TypeScript — via `bench/sweep.py`, and works on any heddle
+The same methodology sweeps *every* unit of all four example projects —
+Python, Go, TypeScript, and Java — via `bench/sweep.py`, and works on any heddle
 project including yours. Full sweeps average lower than the gate (they count
 the leaf types that barely benefit); the ratio tracks dependency depth, so
 deeper projects score higher. All the numbers, their distributions, and the
@@ -190,10 +190,15 @@ heddle init && heddle index && heddle serve   # then point your agent at it
 There are counterpart examples in Go at `examples/go-ledger` (8 contracts over a small
 double-entry ledger, same loop: `heddle init && heddle index`, then
 `heddle verify --radius Entry` gates the blast radius with `go test` under the
-hood — needs a Go toolchain) and in TypeScript at `examples/ts-cart`
+hood — needs a Go toolchain), in TypeScript at `examples/ts-cart`
 (8 contracts over a shopping cart; `npm install` first for its `typescript`,
 then the same loop — verification runs on Node's built-in `node:test`, Node
->= 22.6).
+>= 22.6), and in Java at `examples/java-payroll` (11 contracts over a weekly
+payroll run, three layers deep — records, `Class.method` quals, a parameterized
+bracket table, and a `@Nested` test class with dotted node ids; the shape of a
+Spring service layer with zero framework dependencies. Same loop —
+`heddle verify --radius TimeSheet` runs Maven under the hood; needs a JDK >= 17
+and Maven).
 
 ## Development
 

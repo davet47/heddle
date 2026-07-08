@@ -1,0 +1,10 @@
+name: PaySlip
+signature: "record PaySlip(String employeeId, int grossCents, int taxCents, int netCents)"
+invariants:
+  - net must equal gross minus tax; slipFor is the sanctioned constructor path
+examples:
+  - in: "e1, gross 95000, tax 14000"
+    out: "PaySlip(e1, 95000, 14000, 81000)"
+tests:
+  - src/test/java/payroll/TypesTest.java::paySlipHoldsTheRunResult
+impl: src/main/java/payroll/PaySlip.java::PaySlip

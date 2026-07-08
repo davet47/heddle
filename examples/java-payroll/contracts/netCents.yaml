@@ -1,0 +1,11 @@
+name: netCents
+signature: "static int netCents(int grossCents)"
+deps: [withholdingCents]
+invariants:
+  - exactly gross minus withholding — the identity payslips must reproduce
+examples:
+  - in: "95000"
+    out: "81000"
+tests:
+  - src/test/java/payroll/TaxTest.java::netIsGrossMinusWithholding
+impl: src/main/java/payroll/Tax.java::Tax.netCents

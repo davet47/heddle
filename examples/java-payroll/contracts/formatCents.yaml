@@ -1,0 +1,12 @@
+name: formatCents
+signature: "static String formatCents(int cents)"
+invariants:
+  - dollars with exactly two cent digits; the minus sign leads the dollar sign
+examples:
+  - in: "95000"
+    out: "$950.00"
+  - in: "-1234"
+    out: "-$12.34"
+tests:
+  - src/test/java/payroll/PayrollTest.java::Rendering.formatsCentsAsDollars
+impl: src/main/java/payroll/Payroll.java::Payroll.formatCents

@@ -120,9 +120,10 @@ a contract where it earns no place is correct use, not a failure.
 ## 5. Where to go next
 
 - **Reference projects** — [`examples/sales`](../examples/sales) (Python, 20
-  contracts), [`examples/go-ledger`](../examples/go-ledger) (Go), and
-  [`examples/ts-cart`](../examples/ts-cart) (TypeScript): the same loop in each
-  language, one adapter per impl extension.
+  contracts), [`examples/go-ledger`](../examples/go-ledger) (Go),
+  [`examples/ts-cart`](../examples/ts-cart) (TypeScript), and
+  [`examples/java-payroll`](../examples/java-payroll) (Java): the same loop in
+  each language, one adapter per impl extension.
 - **Team scale** — point `.heddle/config.json` at a shared cache
   (`{"shared": {"url", "token"}}`, backend: `python -m heddle.cache_server`)
   and one teammate's or CI's green serves everyone, keyed by toolchain so a

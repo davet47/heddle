@@ -20,6 +20,12 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Protocol and `adapter_for` routing, with toolchain-free seam tests in
   `tests/test_langs_seam.py`. Heddle-on-heddle: the seam that gained a fourth
   implementation is now itself a contracted unit.
+- **`examples/java-payroll`** — the Java counterpart example: 11 contracts over
+  a weekly payroll run (types → pay/tax arithmetic → payslip rendering, three
+  layers deep), the shape of a Spring service layer with zero framework
+  dependencies (JUnit 5 only, via Maven). Exercises records, `Class.method`
+  quals, a parameterized bracket table, and a `@Nested` test class with dotted
+  node ids. `bench/sweep.py` learns the `.java` suite runner.
 
 ## [0.3.1] - 2026-07-05
 

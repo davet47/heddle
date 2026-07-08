@@ -1,0 +1,11 @@
+name: render
+signature: "static String render(Employee employee, PaySlip slip)"
+deps: [Employee, PaySlip, formatCents]
+invariants:
+  - one line per money field, all through formatCents; ends with net pay
+examples:
+  - in: "Ada's slip — gross 95000, tax 14000, net 81000"
+    out: "Ada (e1), then gross $950.00, tax $140.00, net $810.00 — one per line"
+tests:
+  - src/test/java/payroll/PayrollTest.java::Rendering.rendersOneLinePerField
+impl: src/main/java/payroll/Payroll.java::Payroll.render

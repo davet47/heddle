@@ -17,6 +17,7 @@ heddle version.
 | sales (Python) — full sweep | all 19 verifiable units | 31,495 | 7,618 | **4.1×** | 4.8× | 2026-07-04 | 0.3.0 |
 | go-ledger (Go) — full sweep | all 8 units | 6,656 | 2,201 | **3.0×** | 3.3× | 2026-07-04 | 0.3.0 |
 | ts-cart (TypeScript) — full sweep | all 8 units | 6,400 | 2,087 | **3.1×** | 3.4× | 2026-07-04 | 0.3.0 |
+| java-payroll (Java) — full sweep | all 11 units | 9,670 | 3,036 | **3.2×** | 2.8× | 2026-07-08 | unreleased |
 
 Two different measurements, deliberately: the **DoD gate**
 (`bench/benchmark.py`, enforced in CI, exits nonzero below 5×) measures three
@@ -39,6 +40,9 @@ the more a ~300-token packet replaces:
   files were already packet-sized).
 - **go-ledger**: `Balanced` 4.8× down to `Account` 1.2×.
 - **ts-cart**: `totalCents` 5.0× down to `Sku` 1.5×.
+- **java-payroll**: `slipFor` 5.4× down to `PaySlip` 1.4×. (Maven's quiet
+  mode prints nothing on a green suite, so the raw baseline gets *zero*
+  suite-output tokens here — the Java row is the most conservative of the four.)
 
 The examples are deliberately small (8–20 contracts, 2–3 layers), so their
 sweeps sit in the 3–4× range. Deeper projects score higher, not lower: every
@@ -69,7 +73,11 @@ The methodology (`bench/benchmark.py` and `bench/sweep.py`, same accounting):
 **raw mode** counts what a file-based agent reads to regenerate one unit — the
 spec and full source file of the unit *and* of every transitive dependency,
 the unit's own tests, and one full test-suite run's output at the runner's
-defaults (pytest / `go test ./...` / `node --test`). **Heddle mode** counts
+defaults (pytest / `go test ./...` / `node --test`) — except Java, where the
+runner is `mvn --batch-mode -q test`: Maven's default INFO logging would
+inflate the raw baseline, so the Java row runs quiet and a green suite
+contributes *zero* suite-output tokens (see the distribution note above).
+**Heddle mode** counts
 the JSON of three tool responses: `get_contract`,
 `get_dependents(transitive=true)`, `verify`.
 
@@ -103,6 +111,7 @@ uv run python bench/benchmark.py
 uv run python bench/sweep.py examples/sales
 uv run python bench/sweep.py examples/go-ledger     # needs a Go toolchain
 uv run python bench/sweep.py examples/ts-cart       # npm install there first; Node >= 22.6
+uv run python bench/sweep.py examples/java-payroll  # needs a JDK >= 17 and Maven
 ```
 
 New scenario runs belong in the table above — record the scope, date, and

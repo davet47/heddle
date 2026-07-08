@@ -7,13 +7,14 @@ unit's tests, and one full test-suite run's output) against heddle mode (the
 get_contract packet, a blast-radius check, and the verify response).
 
 Language-aware only where it must be: the suite-output component runs each
-project's natural runner (pytest / `go test ./...` / `node --test`), chosen by
-the impl extensions present. No pass/fail gate — bench/benchmark.py remains
+project's natural runner (pytest / `go test ./...` / `node --test` / `mvn -q
+test`), chosen by the impl extensions present. No pass/fail gate — bench/benchmark.py remains
 the DoD guard; this reports.
 
     uv run python bench/sweep.py examples/sales
     uv run python bench/sweep.py examples/go-ledger
-    uv run python bench/sweep.py examples/ts-cart   # npm install there first
+    uv run python bench/sweep.py examples/ts-cart       # npm install there first
+    uv run python bench/sweep.py examples/java-payroll  # needs a JDK + Maven
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ SUITE_CMDS = {
     ".py": [sys.executable, "-B", "-m", "pytest"],
     ".go": ["go", "test", "./..."],
     ".ts": ["node", "--test", "--experimental-strip-types"],
+    ".java": ["mvn", "--batch-mode", "-q", "test"],
 }
 
 
@@ -61,7 +63,10 @@ def sweepable(store: Store) -> list[str]:
 
 
 def suite_output_tokens(root: Path, names: list[str], store: Store) -> int:
-    """One full-suite run per language present, at each runner's defaults."""
+    """One full-suite run per language present, at each runner's defaults —
+    except Maven, run with -q: its INFO log would swamp the comparison, so a
+    green Java suite contributes zero tokens (the most conservative baseline).
+    """
     exts = set()
     for name in names:
         data = yaml.safe_load(store.get_contract(name)["yaml"])

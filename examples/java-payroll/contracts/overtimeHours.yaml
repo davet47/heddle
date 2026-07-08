@@ -1,0 +1,11 @@
+name: overtimeHours
+signature: "static int overtimeHours(TimeSheet sheet)"
+deps: [TimeSheet]
+invariants:
+  - hours past the 40-hour week; never negative
+examples:
+  - in: "45 hours"
+    out: "5"
+tests:
+  - src/test/java/payroll/PayTest.java::overtimeStartsPastFortyHours
+impl: src/main/java/payroll/Pay.java::Pay.overtimeHours
