@@ -56,6 +56,24 @@ CALC = """
 
         def add(self, item: Item) -> None:
             self.name += item and ""
+
+
+    @dataclass(frozen=True)
+    class Point:
+        x: float
+        y: float
+
+
+    class Empty:
+        pass
+
+
+    async def fetch(url: str, *args: int, timeout: float = 1.0, **kw: str) -> str:
+        return url
+
+
+    def scale(x: float, *, factor: float = 2.0) -> float:
+        return x * factor
 """
 
 OTHER = """
@@ -128,11 +146,19 @@ def gproject(tmp_path: Path):
             _node("src_calc_report", "report()", "src/calc.py", _line(calc, "@log_calls")),
             _node("src_calc_ledger", "Ledger", "src/calc.py", _line(calc, "class Ledger")),
             _node("src_calc_ledger_add", ".add()", "src/calc.py", _line(calc, "def add")),
+            _node("src_calc_point", "Point", "src/calc.py", _line(calc, "@dataclass(frozen=True)")),
+            _node("src_calc_empty", "Empty", "src/calc.py", _line(calc, "class Empty")),
+            _node("src_calc_fetch", "fetch()", "src/calc.py", _line(calc, "async def fetch")),
+            _node("src_calc_scale", "scale()", "src/calc.py", _line(calc, "def scale")),
             _node("src_other_total", "total()", "src/other.py", 1),
             _node("lib_parse_parse", "parse()", "lib/parse.go", 5),
             _node("tests_test_calc_test_total", "test_total()", "tests/test_calc.py", _line(tcalc, "def test_total")),
             _node("tests_test_calc_test_report", ".test_report()", "tests/test_calc.py", _line(tcalc, "def test_report")),
             _node("tests_test_calc_make", "_make()", "tests/test_calc.py", _line(tcalc, "def _make")),
+            # junk the loader must skip: non-code, no location, empty name
+            {"id": "doc_readme", "label": "README.md", "file_type": "document", "source_file": "README.md", "source_location": "L1"},
+            _node("src_calc_null_loc", "orphan()", "src/calc.py", None),
+            _node("src_calc_dot", ".", "src/calc.py", 2),
         ],
         "links": [
             _edge("src_calc_total", "src_calc_item", "calls", "EXTRACTED"),
@@ -326,6 +352,74 @@ def test_rejects_a_non_graph_json(gproject, tmp_path):
     bogus.write_text('{"foo": 1}')
     with pytest.raises(SystemExit):
         gi.main([str(bogus), "--root", str(root), "--list"])
+
+
+def test_more_signature_shapes(gproject):
+    root, graph = gproject
+    assert (
+        run(
+            root, graph, "--units",
+            "src/calc.py::Point", "src/calc.py::Empty", "src/calc.py::fetch", "src/calc.py::scale",
+        )
+        == 0
+    )
+    # call-form decorator still detected; graph line points at the decorator
+    assert read_contract(root, "Point")["signature"] == "dataclass: Point(x: float, y: float)"
+    # class with no __init__
+    assert read_contract(root, "Empty")["signature"] == "class: Empty"
+    # async def, *args, keyword-only with default, **kwargs
+    assert read_contract(root, "fetch")["signature"] == "(url: str, *args: int, timeout: float = 1.0, **kw: str) -> str"
+    # keyword-only marker without *args
+    assert read_contract(root, "scale")["signature"] == "(x: float, *, factor: float = 2.0) -> float"
+
+
+def test_unknown_selectors_error(gproject, capsys):
+    root, graph = gproject
+    assert run(root, graph, "--units", "src/calc.py::ghost", "nowhere") == 1
+    err = capsys.readouterr().err
+    assert "'src/calc.py::ghost' not found" in err and "'nowhere' not found" in err
+
+
+def test_missing_source_file_is_fatal(gproject, capsys):
+    root, graph = gproject
+    (root / "src" / "calc.py").unlink()
+    assert run(root, graph, "--units", "src/calc.py::total") == 1
+    assert "does not exist under" in capsys.readouterr().err
+
+
+def test_unparseable_source_file_is_fatal(gproject, capsys):
+    root, graph = gproject
+    (root / "src" / "calc.py").write_text("def broken(:\n")
+    assert run(root, graph, "--units", "src/calc.py::total") == 1
+    assert "cannot parse" in capsys.readouterr().err
+
+
+def test_bad_root_and_bad_json(gproject, tmp_path, capsys):
+    root, graph = gproject
+    assert run(Path("/nonexistent/nowhere"), graph, "--list") == 1
+    assert "is not a directory" in capsys.readouterr().err
+    broken = tmp_path / "broken.json"
+    broken.write_text("{not json")
+    with pytest.raises(SystemExit):
+        gi.main([str(broken), "--root", str(root), "--list"])
+
+
+def test_test_qual_recovery_and_degradation(gproject):
+    root, graph_path = gproject
+    # stale line: the name fallback still recovers the TestReport:: prefix
+    graph = json.loads(graph_path.read_text())
+    for n in graph["nodes"]:
+        if n["id"] == "tests_test_calc_test_report":
+            n["source_location"] = "L999"
+    graph_path.write_text(json.dumps(graph))
+    assert run(root, graph_path, "--units", "src/calc.py::report") == 0
+    assert read_contract(root, "report")["tests"] == ["tests/test_calc.py::TestReport::test_report"]
+
+    # unparseable test file: the class is unrecoverable, node id degrades to
+    # the label-derived form (and the run itself is unaffected)
+    (root / "tests" / "test_calc.py").write_text("def broken(:\n")
+    assert run(root, graph_path, "--units", "src/calc.py::report", "--force") == 0
+    assert read_contract(root, "report")["tests"] == ["tests/test_calc.py::test_report"]
 
 
 def test_accepts_edges_key_alias(gproject):
